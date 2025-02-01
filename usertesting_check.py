@@ -11,7 +11,7 @@ USERTESTING_PASSWORD = "Pankaj15@"
 TWILIO_ACCOUNT_SID = "AC371a5ba7227a379a94ee8b9889e8a118"
 TWILIO_AUTH_TOKEN = "1b8df052bade6f2d07ce340f7c61eed9"
 TWILIO_PHONE_NUMBER = "+15804074051"
-YOUR_PHONE_NUMBER = "+919404135316
+YOUR_PHONE_NUMBER = "+919404135316"
 # Set up Selenium with Chromium
 chrome_options = Options()
 chrome_options.binary_location = "/usr/bin/chromium-browser"
