@@ -22,12 +22,16 @@ jobs:
         run: |
           pip install selenium twilio
 
-      - name: Set up ChromeDriver
+      - name: Install Google Chrome
         run: |
           sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Install ChromeDriver
+        run: |
           sudo apt-get install -y chromium-chromedriver
           echo "CHROMEDRIVER_PATH=$(which chromedriver)" >> $GITHUB_ENV
-          echo "CHROME_BIN=/usr/bin/chromium-browser" >> $GITHUB_ENV
+          echo "CHROME_BIN=/usr/bin/google-chrome" >> $GITHUB_ENV
 
       - name: Run UserTesting Checker
         run: python usertesting_check.py
