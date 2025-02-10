@@ -16,13 +16,13 @@ TWILIO_PHONE_NUMBER = "+15804074051"
 YOUR_PHONE_NUMBER = "+919404135316"
 # Set up Selenium with Chromium
 chrome_options = Options()
-chrome_options.binary_location = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe"
+chrome_options.binary_location = "/usr/bin/chromium-browser"
 # chrome_options.add_argument("--headless")  # Run in headless mode
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 
 # Initialize WebDriver
-service = Service("c:\chromedriver\chromedriver.exe")
+service = Service("/usr/bin/chromedriver")
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
 
