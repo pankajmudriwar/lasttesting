@@ -6,7 +6,6 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 from twilio.rest import Client
-import tempfile
 
 # Hardcoded credentials
 USERTESTING_EMAIL = "mudriwarfalgun@gmail.com"
@@ -22,10 +21,8 @@ chrome_options = Options()
 chrome_options.binary_location = "/usr/bin/chromium-browser"
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
-
-# Use a temporary directory for the Chrome user data to avoid conflicts
-temp_dir = tempfile.mkdtemp()
-chrome_options.add_argument(f"--user-data-dir={temp_dir}")
+chrome_options.add_argument("--headless=new")  # Optional: Headless mode if you don't need a UI
+chrome_options.add_experimental_option("detach", True)  # Prevent the browser from closing immediately
 
 # Initialize WebDriver
 service = Service("/usr/bin/chromedriver")
@@ -90,7 +87,7 @@ try:
     test_message_selector = ".available-tests-list__empty-state.mh-auto.l-block"
 
     try:
-        element = WebDriverWait(driver, 550).until(
+        element = WebDriverWait(driver, 100).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, test_message_selector))
         )
         print("No tests available:", element.text)
@@ -107,4 +104,3 @@ except Exception as e:
 finally:
     driver.quit()
     print("WebDriver closed.")
-
