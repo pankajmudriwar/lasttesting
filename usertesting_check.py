@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 from twilio.rest import Client
+import tempfile
 
 # Hardcoded credentials
 USERTESTING_EMAIL = "mudriwarfalgun@gmail.com"
@@ -19,14 +20,16 @@ YOUR_PHONE_NUMBER = "+919404135316"
 # Set up Selenium with Chromium
 chrome_options = Options()
 chrome_options.binary_location = "/usr/bin/chromium-browser"
-# chrome_options.add_argument("--headless")  # Optional for local development
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
+
+# Use a temporary directory for the Chrome user data to avoid conflicts
+temp_dir = tempfile.mkdtemp()
+chrome_options.add_argument(f"--user-data-dir={temp_dir}")
 
 # Initialize WebDriver
 service = Service("/usr/bin/chromedriver")
 driver = webdriver.Chrome(service=service, options=chrome_options)
-
 
 def send_sms():
     """Send an SMS notification via Twilio."""
@@ -41,7 +44,6 @@ def send_sms():
     except Exception as e:
         print("Error sending SMS:", str(e))
 
-
 def send_call():
     """Make a voice call via Twilio."""
     try:
@@ -55,14 +57,11 @@ def send_call():
     except Exception as e:
         print("Error sending call:", str(e))
 
-
 try:
-    # Open UserTesting login page
     driver.get("https://auth.usertesting.com/")
     print("Opened UserTesting login page.")
-    time.sleep(3)  # Original timer for page load
+    time.sleep(3)
 
-    # Login process
     email_field = WebDriverWait(driver, 10).until(
         EC.presence_of_element_located((By.ID, "idp-discovery-username"))
     )
@@ -87,23 +86,20 @@ try:
     signin_field.click()
     print("Clicked 'Sign In'.")
 
-    # Wait for page load and check for test availability
     search_message = "Check back anytime for new tests, or we'll notify you."
     test_message_selector = ".available-tests-list__empty-state.mh-auto.l-block"
 
-    # Wait for the availability message to load
     try:
-        element = WebDriverWait(driver, 1000).until(  # Restored original 1000-second wait time
+        element = WebDriverWait(driver, 550).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, test_message_selector))
         )
         print("No tests available:", element.text)
     except:
-        # If the element is not found, assume tests are available
         print("Tests are available!")
         # send_sms()
         send_call()
 
-    time.sleep(50)  # Original wait time before ending the session
+    time.sleep(55)
 
 except Exception as e:
     print("Error:", str(e))
@@ -111,3 +107,4 @@ except Exception as e:
 finally:
     driver.quit()
     print("WebDriver closed.")
+
