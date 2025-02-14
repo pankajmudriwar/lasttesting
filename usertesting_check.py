@@ -1,9 +1,10 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-import time
 from selenium.webdriver.common.by import By
-import re
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
 from twilio.rest import Client
 
 # Hardcoded credentials
@@ -14,10 +15,11 @@ TWILIO_ACCOUNT_SID = "AC371a5ba7227a379a94ee8b9889e8a118"
 TWILIO_AUTH_TOKEN = "52dfdd8430d84278c032769c0756b3a9"
 TWILIO_PHONE_NUMBER = "+15804074051"
 YOUR_PHONE_NUMBER = "+919404135316"
+
 # Set up Selenium with Chromium
 chrome_options = Options()
 chrome_options.binary_location = "/usr/bin/chromium-browser"
-# chrome_options.add_argument("--headless")  # Run in headless mode
+# chrome_options.add_argument("--headless")  # Optional for local development
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 
@@ -27,93 +29,85 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 
 
 def send_sms():
-    # Send SMS Notification via Twilio
-    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    """Send an SMS notification via Twilio."""
+    try:
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        message = client.messages.create(
+            body="A UserTesting test is available!",
+            from_=TWILIO_PHONE_NUMBER,
+            to=YOUR_PHONE_NUMBER
+        )
+        print("SMS Sent:", message.sid)
+    except Exception as e:
+        print("Error sending SMS:", str(e))
 
-
-
-    message = client.messages.create(
-        body="ha test available hai",
-        from_=TWILIO_PHONE_NUMBER,
-        to=YOUR_PHONE_NUMBER
-    )
-    print("SMS Sent:", message.sid)
 
 def send_call():
-    TWILIO_ACCOUNT_SID = "AC371a5ba7227a379a94ee8b9889e8a118"
-    TWILIO_AUTH_TOKEN = "52dfdd8430d84278c032769c0756b3a9"
-    TWILIO_PHONE_NUMBER = "+15804074051"
-    YOUR_PHONE_NUMBER = "+919404135316"
-    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-    call = client.calls.create(
-    url="http://demo.twilio.com/docs/voice.xml",
-    to=YOUR_PHONE_NUMBER,
-    from_=TWILIO_PHONE_NUMBER,)
+    """Make a voice call via Twilio."""
+    try:
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        call = client.calls.create(
+            url="http://demo.twilio.com/docs/voice.xml",
+            to=YOUR_PHONE_NUMBER,
+            from_=TWILIO_PHONE_NUMBER
+        )
+        print("Call Sent:", call.sid)
+    except Exception as e:
+        print("Error sending call:", str(e))
+
 
 try:
     # Open UserTesting login page
     driver.get("https://auth.usertesting.com/")
+    print("Opened UserTesting login page.")
+    time.sleep(3)  # Original timer for page load
 
-    time.sleep(3)  # Wait for the page to load
-
-    # Find login fields and enter credentials
-    from selenium.webdriver.common.by import By
-    from selenium.webdriver.support.ui import WebDriverWait
-    from selenium.webdriver.support import expected_conditions as EC
-
-# Wait for the email field to appear (max 10 seconds)
+    # Login process
     email_field = WebDriverWait(driver, 10).until(
-    EC.presence_of_element_located((By.ID, "idp-discovery-username"))
+        EC.presence_of_element_located((By.ID, "idp-discovery-username"))
     )
     email_field.send_keys(USERTESTING_EMAIL)
-    
+    print("Entered email.")
+
     next_field = WebDriverWait(driver, 10).until(
-    EC.presence_of_element_located((By.ID, "idp-discovery-submit"))
+        EC.element_to_be_clickable((By.ID, "idp-discovery-submit"))
     )
-    
-    
     next_field.click()
-      
-    signin_page="https://auth.usertesting.com/signin"
+    print("Clicked 'Next'.")
 
     password_field = WebDriverWait(driver, 10).until(
-        
-    EC.presence_of_element_located((By.ID, "okta-signin-password"))
+        EC.presence_of_element_located((By.ID, "okta-signin-password"))
     )
-
     password_field.send_keys(USERTESTING_PASSWORD)
+    print("Entered password.")
 
     signin_field = WebDriverWait(driver, 10).until(
-    EC.presence_of_element_located((By.ID, "okta-signin-submit"))
+        EC.element_to_be_clickable((By.ID, "okta-signin-submit"))
     )
     signin_field.click()
-    
-    # signin id=okta-signin-submit
-    # passwordid=okta-signin-password
+    print("Clicked 'Sign In'.")
 
-    # text= We're looking for available tests... 
+    # Wait for page load and check for test availability
+    search_message = "Check back anytime for new tests, or we'll notify you."
+    test_message_selector = ".available-tests-list__empty-state.mh-auto.l-block"
 
-    search_text = "Check back anytime for new tests, or we'll notify you."
-      # Print the full page source
-    elements = WebDriverWait(driver, 1000).until(
-    EC.presence_of_element_located((By.CSS_SELECTOR, ".available-tests-list__empty-state.mh-auto.l-block"))
-    )
-    # elements = driver.find_elements(By.CSS_SELECTOR, ".available-tests-list__empty-state.mh-auto.l-block")
-    print(elements)
-    if elements:
-        print("test is not available")
-    else:
-        print("test is available")
+    # Wait for the availability message to load
+    try:
+        element = WebDriverWait(driver, 1000).until(  # Restored original 1000-second wait time
+            EC.presence_of_element_located((By.CSS_SELECTOR, test_message_selector))
+        )
+        print("No tests available:", element.text)
+    except:
+        # If the element is not found, assume tests are available
+        print("Tests are available!")
+        # send_sms()
         send_call()
 
-
-
-    
-    
-    time.sleep(50)
+    time.sleep(50)  # Original wait time before ending the session
 
 except Exception as e:
     print("Error:", str(e))
 
 finally:
     driver.quit()
+    print("WebDriver closed.")
